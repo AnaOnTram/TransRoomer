@@ -1,0 +1,48 @@
+# =================================================================
+# PYTHON & ENVIRONMENT
+# =================================================================
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+
+# =================================================================
+# EXTERNAL DEPENDENCIES & LOGS
+# =================================================================
+# We ignore the whole ComfyUI folder (users clone it via README)
+ComfyUI/
+
+# Logs and Process IDs
+log/*.log
+services.pid
+
+# System files
+.DS_Store
+Thumbs.db
+
+# =================================================================
+# DATA MANAGEMENT
+# =================================================================
+
+# 1. SAMPLES: Keep everything in the samples gallery for instant use
+data/samples/*
+!data/samples/.gitkeep
+
+# 2. INPUTS: Ignore user uploads, but KEEP the 3 demo files
+data/inputs/*
+!data/inputs/empty_room_00001.*
+!data/inputs/empty_room_00002.*
+!data/inputs/empty_room_00003.*
+
+# 3. OUTPUTS: Ignore user generations, but KEEP the 3 demo results + metadata
+data/outputs/*
+!data/outputs/virtual_staging_00001.*
+!data/outputs/virtual_staging_00002.*
+!data/outputs/virtual_staging_00003.*
+
+# 4. FOLDER STRUCTURE: Ensure empty folders are tracked by GitHub
+# (Useful if you delete all inputs/outputs later)
+!data/inputs/.gitkeep
+!data/outputs/.gitkeep
