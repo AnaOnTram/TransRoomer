@@ -1,7 +1,5 @@
 # 🛋️ Virtual Staging AI
 
-A powerful, locally hosted application that transforms photos of empty rooms into fully furnished interiors using Generative AI.
-
 This project orchestrates **Stable Diffusion XL (via ComfyUI)** for photorealistic image generation and **Ollama (Local LLM)** for intelligent prompt enhancement, wrapped in a user-friendly **Streamlit** interface.
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
