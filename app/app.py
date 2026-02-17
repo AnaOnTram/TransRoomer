@@ -46,13 +46,13 @@ class APIClient:
     @staticmethod
     def is_online() -> bool:
         try:
-            return requests.get(f"{FASTAPI_URL}/health", timeout=2).status_code == 200
+            return requests.get(f"{FASTAPI_URL}/health", timeout=60).status_code == 200
         except:
             return False
 
     @staticmethod
     def enhance_prompt(description: str) -> dict:
-        resp = requests.post(f"{FASTAPI_URL}/enhance-prompt", json={"room_description": description}, timeout=60)
+        resp = requests.post(f"{FASTAPI_URL}/enhance-prompt", json={"room_description": description}, timeout=180)
         return resp.json()
 
     @staticmethod
