@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Transform any room with AI-powered interior design. Upload a photo, describe your vision, and see your space reimagined.">
+    <title>TransRoomer - AI Room Transformation</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Skip to main content for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Navigation -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="nav-container">
+            <a href="/" class="logo" aria-label="TransRoomer Home">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <rect x="4" y="10" width="10" height="12" rx="2" fill="currentColor" opacity="0.6"/>
+                    <rect x="16" y="6" width="12" height="20" rx="2" fill="currentColor"/>
+                    <path d="M10 25 L16 19 L22 25" stroke="currentColor" stroke-width="2" fill="none" opacity="0.8"/>
+                </svg>
+                <span>TransRoomer</span>
+            </a>
+            <div class="nav-links">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/>
+                        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>
+                    <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- Hero Section -->
+        <section class="hero" aria-labelledby="hero-title">
+            <div class="hero-content">
+                <h1 id="hero-title" class="hero-title">
+                    <span class="gradient-text">Transform</span> any room into<br>your dream space
+                </h1>
+                <p class="hero-subtitle">
+                    Upload a photo, describe your vision, and watch AI reimagine your interior. Professional-grade transformations in seconds.
+                </p>
+            </div>
+            <div class="hero-visual">
+                <div class="floating-card card-1">
+                    <div class="card-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                </div>
+                <div class="floating-card card-2">
+                    <div class="card-image" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                </div>
+                <div class="floating-card card-3">
+                    <div class="card-image" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Application -->
+        <section class="app-section" aria-labelledby="app-title">
+            <div class="container">
+                <h2 id="app-title" class="section-title">Create Your Design</h2>
+                
+                <div class="app-grid">
+                    <!-- Input Panel -->
+                    <div class="panel input-panel">
+                        <div class="panel-header">
+                            <div class="step-number">1</div>
+                            <h3>Upload & Describe</h3>
+                        </div>
+                        
+                        <!-- Drop Zone -->
+                        <div class="drop-zone" id="drop-zone" role="button" tabindex="0" aria-label="Upload room image">
+                            <input type="file" id="file-input" accept="image/*" aria-label="Choose image file" hidden>
+                            <div class="drop-zone-content">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                <p class="drop-text">Drop your image here or click to browse</p>
+                                <p class="drop-hint">Supports JPG, PNG up to 10MB</p>
+                            </div>
+                            <div class="drop-zone-preview" id="preview-container" hidden>
+                                <img id="image-preview" alt="Preview of uploaded room">
+                                <button class="remove-image" id="remove-image" aria-label="Remove image">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="18" y1="6" x2="6" y2="18"/>
+                                        <line x1="6" y1="6" x2="18" y2="18"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Description Input -->
+                        <div class="input-group">
+                            <label for="room-description" class="input-label">Room Description</label>
+                            <textarea 
+                                id="room-description" 
+                                class="input-field" 
+                                rows="4" 
+                                placeholder="E.g., Transform this living room into a minimalist Japandi style with light oak furniture, neutral tones, and soft natural lighting..."
+                                aria-describedby="description-help"
+                            ></textarea>
+                            <p id="description-help" class="input-help">Describe your vision for the room transformation</p>
+                        </div>
+
+                        <!-- Resolution Slider -->
+                        <div class="input-group">
+                            <label for="resolution" class="input-label">
+                                Output Resolution
+                                <span class="resolution-value" id="resolution-value">1024px</span>
+                            </label>
+                            <input 
+                                type="range" 
+                                id="resolution" 
+                                class="slider" 
+                                min="768" 
+                                max="2048" 
+                                step="64" 
+                                value="1024"
+                                aria-label="Output resolution"
+                            >
+                            <div class="slider-labels">
+                                <span>768px</span>
+                                <span>2048px</span>
+                            </div>
+                        </div>
+
+                        <!-- Generate Button -->
+                        <button id="generate-btn" class="generate-btn" disabled>
+                            <span class="btn-text">Transform Room</span>
+                            <span class="btn-loading" hidden>
+                                <svg class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" stroke-dasharray="31.416" stroke-dashoffset="10"/>
+                                </svg>
+                                Transforming...
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Result Panel -->
+                    <div class="panel result-panel">
+                        <div class="panel-header">
+                            <div class="step-number">2</div>
+                            <h3>Your Transformation</h3>
+                        </div>
+                        
+                        <div class="result-container" id="result-container">
+                            <!-- Empty State -->
+                            <div class="empty-state" id="empty-state">
+                                <div class="empty-illustration">
+                                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" aria-hidden="true">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                                        <polyline points="21 15 16 10 5 21"/>
+                                    </svg>
+                                </div>
+                                <h4>Ready to Transform</h4>
+                                <p>Upload an image and describe your vision to get started</p>
+                            </div>
+
+                            <!-- Loading State -->
+                            <div class="loading-state" id="loading-state" hidden>
+                                <div class="loading-animation">
+                                    <div class="loading-ring"></div>
+                                    <div class="loading-ring"></div>
+                                    <div class="loading-ring"></div>
+                                </div>
+                                <div class="loading-steps">
+                                    <div class="step" data-step="1">
+                                        <div class="step-icon">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                                <polyline points="17 8 12 3 7 8"/>
+                                                <line x1="12" y1="3" x2="12" y2="15"/>
+                                            </svg>
+                                        </div>
+                                        <span>Analyzing image...</span>
+                                    </div>
+                                    <div class="step" data-step="2">
+                                        <div class="step-icon">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                                            </svg>
+                                        </div>
+                                        <span>Processing design...</span>
+                                    </div>
+                                    <div class="step" data-step="3">
+                                        <div class="step-icon">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                                            </svg>
+                                        </div>
+                                        <span>Generating result...</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Result State - Focused on Final Output -->
+                            <div class="result-content" id="result-content" hidden>
+                                <div class="result-showcase">
+                                    <div class="result-image-wrapper">
+                                        <img id="result-staged" alt="AI transformed room design">
+                                        <div class="result-overlay">
+                                            <button class="expand-btn" id="expand-btn" aria-label="View full size">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="result-details">
+                                    <button class="collapsible" aria-expanded="false" aria-controls="prompt-details">
+                                        <span>View Design Reasoning</span>
+                                        <svg class="chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="6 9 12 15 18 9"/>
+                                        </svg>
+                                    </button>
+                                    <div id="prompt-details" class="collapsible-content" hidden>
+                                        <pre id="enhanced-prompt" class="prompt-text"></pre>
+                                    </div>
+                                </div>
+
+                                <!-- Feedback Section for Refinement -->
+                                <div class="feedback-section" id="feedback-section">
+                                    <div class="feedback-header">
+                                        <h4>Refine Your Design</h4>
+                                        <span class="iteration-badge" id="iteration-badge">Iteration 1</span>
+                                    </div>
+                                    <p class="feedback-hint">Not quite right? Tell us what to change and we'll refine it.</p>
+                                    <textarea 
+                                        id="feedback-input" 
+                                        class="input-field feedback-input" 
+                                        rows="2" 
+                                        placeholder="E.g., Make the bed larger, change the wall color to blue, add more lighting..."
+                                        aria-label="Feedback for design refinement"
+                                    ></textarea>
+                                    <button id="refine-btn" class="refine-btn">
+                                        <span class="btn-text">Refine Design</span>
+                                        <span class="btn-loading" hidden>
+                                            <svg class="spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="12" cy="12" r="10" stroke-dasharray="31.416" stroke-dashoffset="10"/>
+                                            </svg>
+                                            Refining...
+                                        </span>
+                                    </button>
+                                </div>
+
+                                <div class="result-actions">
+                                    <button id="download-btn" class="action-btn secondary">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                            <polyline points="7 10 12 15 17 10"/>
+                                            <line x1="12" y1="15" x2="12" y2="3"/>
+                                        </svg>
+                                        Download
+                                    </button>
+                                    <button id="new-design-btn" class="action-btn primary">
+                                        Transform Another Room
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- History Section -->
+        <section class="history-section" aria-labelledby="history-title">
+            <div class="container">
+                <h2 id="history-title" class="section-title">Recent Transformations</h2>
+                <div class="history-grid" id="history-grid">
+                    <!-- History items will be loaded here -->
+                    <div class="history-empty">
+                        <p>No transformations yet. Create your first one above!</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 TransRoomer. Transforming spaces with AI.</p>
+        </div>
+    </footer>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

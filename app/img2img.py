@@ -30,7 +30,11 @@ class ComfyUI:
         self.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     def generate_image(
-        self, prompt: str, input_image_path: Path, target_resolution: int = 1024
+        self,
+        prompt: str,
+        input_image_path: Path,
+        target_resolution: int = 1024,
+        task_type: str = "style",
     ) -> str:
         """
         Main entry point to generate a staged image.
@@ -59,12 +63,13 @@ class ComfyUI:
             # 1. Prepare
             comfy_input_path = self._copy_to_comfy_input(input_image_path)
 
-            # 2. Create Workflow
+            # 2. Create Workflow with task-specific ControlNet settings
             workflow = self.workflow_manager.create_custom_workflow(
                 prompt=prompt,
                 input_image_path=input_image_path,
                 output_prefix=temp_prefix,
                 target_resolution=target_resolution,
+                task_type=task_type,
             )
 
             # 3. Queue & Wait

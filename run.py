@@ -11,6 +11,7 @@ import json
 import threading
 import webbrowser
 import urllib.request
+import socket
 from pathlib import Path
 
 # Configuration
@@ -22,7 +23,21 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 COMFYUI_DIR = Path("~/ComfyUI").expanduser().resolve()
 COMFYUI_PORT = 8188
 FASTAPI_PORT = 8000
-STREAMLIT_PORT = 8501
+HOST = "0.0.0.0"  # Listen on all interfaces for LAN access
+
+
+def get_local_ip():
+    """Get the local IP address for LAN access."""
+    try:
+        # Create a socket to get the local IP
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))  # Connect to Google DNS
+        local_ip = s.getsockname()[0]
+        s.close()
+        return local_ip
+    except Exception:
+        return "127.0.0.1"
+
 
 # ----------------------------- Environment Setup -----------------------------
 
@@ -119,12 +134,12 @@ def start_comfyui():
 
 
 def start_fastapi():
-    """Start FastAPI backend."""
+    """Start FastAPI backend with integrated frontend."""
     if check_port_in_use(FASTAPI_PORT):
         print(f"   ⚠️  Port {FASTAPI_PORT} in use. Assuming FastAPI is running.")
         return None
 
-    print("🔌 Starting FastAPI backend...")
+    print("🔌 Starting FastAPI with frontend...")
     log_path = LOG_DIR / "fastapi.log"
     log_file = open(log_path, "w", encoding="utf-8")
 
@@ -136,7 +151,7 @@ def start_fastapi():
             "app.main:app",
             "--reload",
             "--host",
-            "127.0.0.1",
+            HOST,
             "--port",
             str(FASTAPI_PORT),
         ],
@@ -150,46 +165,6 @@ def start_fastapi():
     save_pid("fastapi", process.pid)
     threading.Thread(
         target=stream_logs, args=(process.stdout, "FASTAPI", log_file), daemon=True
-    ).start()
-    time.sleep(1)
-    return process
-
-
-def start_streamlit():
-    """Start Streamlit frontend."""
-    if check_port_in_use(STREAMLIT_PORT):
-        print(f"   ⚠️  Port {STREAMLIT_PORT} in use. Assuming Streamlit is running.")
-        return None
-
-    print("🎨 Starting Streamlit app...")
-    log_path = LOG_DIR / "streamlit.log"
-    log_file = open(log_path, "w", encoding="utf-8")
-
-    streamlit_script = PROJECT_ROOT / "app" / "app.py"
-    process = subprocess.Popen(
-        [
-            PYTHON_EXEC,
-            "-m",
-            "streamlit",
-            "run",
-            str(streamlit_script),
-            "--server.port",
-            str(STREAMLIT_PORT),
-            "--server.address",
-            "127.0.0.1",
-            "--server.headless",
-            "true",
-        ],
-        cwd=PROJECT_ROOT,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        env=ENV_VARS,
-        bufsize=1,
-    )
-
-    save_pid("streamlit", process.pid)
-    threading.Thread(
-        target=stream_logs, args=(process.stdout, "STREAMLIT", log_file), daemon=True
     ).start()
     time.sleep(1)
     return process
@@ -221,21 +196,28 @@ def main():
 
     start_comfyui()
     start_fastapi()
-    start_streamlit()
     check_llm_api()
 
-    print("\n✅ Services Initialized!")
-    print(f"  • ComfyUI      : http://127.0.0.1:{COMFYUI_PORT}")
-    print(f"  • FastAPI Docs : http://127.0.0.1:{FASTAPI_PORT}/docs")
-    print(f"  • Streamlit UI : http://127.0.0.1:{STREAMLIT_PORT}")
-    print("  • LLM API      : http://127.0.0.1:8080 (llama.cpp)")
+    # Get local IP for LAN access
+    local_ip = get_local_ip()
 
-    print("\nLogs are being written to the 'log/' folder.")
-    print("To stop services, run 'python stop.py'")
+    print("\n✅ Services Initialized!")
+    print(f"\n📱 Local Access (this machine):")
+    print(f"  • Web Interface  : http://127.0.0.1:{FASTAPI_PORT}")
+    print(f"  • ComfyUI        : http://127.0.0.1:{COMFYUI_PORT}")
+    print(f"\n🌐 LAN Access (other devices on network):")
+    print(f"  • Web Interface  : http://{local_ip}:{FASTAPI_PORT}")
+    print(f"  • ComfyUI        : http://{local_ip}:{COMFYUI_PORT}")
+    print(f"\n📚 API Documentation:")
+    print(f"  • FastAPI Docs   : http://127.0.0.1:{FASTAPI_PORT}/docs")
+    print(f"  • LLM API        : http://127.0.0.1:8080 (llama.cpp)")
+
+    print("\n📝 Logs are being written to the 'log/' folder.")
+    print("🛑 To stop services, press Ctrl+C or run 'python stop.py'")
 
     try:
         time.sleep(2)
-        webbrowser.open(f"http://127.0.0.1:{STREAMLIT_PORT}")
+        webbrowser.open(f"http://127.0.0.1:{FASTAPI_PORT}")
     except:
         pass
 
