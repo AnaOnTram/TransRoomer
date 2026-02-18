@@ -2,12 +2,16 @@
 Configuration Settings
 Centralizes file paths, model constants, and system prompts.
 """
+
 from pathlib import Path
 
 # -----------------------------------------------------------------------------
 # Path Configurations
 # -----------------------------------------------------------------------------
 PROJECT_ROOT = Path(__file__).parent.parent.resolve()
+
+# ComfyUI Configuration
+COMFYUI_BASE_PATH = "~/ComfyUI"  # Path to ComfyUI installation
 
 # Data Directories
 DATA_INPUT_DIR = PROJECT_ROOT / "data" / "inputs"
@@ -19,10 +23,16 @@ for directory in [DATA_INPUT_DIR, DATA_OUTPUT_DIR]:
     directory.mkdir(parents=True, exist_ok=True)
 
 # -----------------------------------------------------------------------------
+# LLM API Configurations (OpenAI-compatible)
+# -----------------------------------------------------------------------------
+LLM_API_URL = "http://127.0.0.1:8080"  # Default for llama.cpp server
+LLM_MODEL = "default"  # Model identifier (may not be required by llama.cpp)
+
+# -----------------------------------------------------------------------------
 # Model Configurations
 # -----------------------------------------------------------------------------
-OLLAMA_MODEL = "qwen3:4b"
-CHECKPOINT_NAME = "SDXL\\juggernautXL_ragnarokBy.safetensors"
+# Use forward slashes for cross-platform compatibility
+CHECKPOINT_NAME = "juggernautxlRagnarok.k3mq.safetensors"
 
 # -----------------------------------------------------------------------------
 # System Prompts

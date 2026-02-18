@@ -19,12 +19,13 @@ PID_FILE = PROJECT_ROOT / "services.pid"
 LOG_DIR = PROJECT_ROOT / "log"
 LOG_DIR.mkdir(parents=True, exist_ok=True)
 
-COMFYUI_DIR = PROJECT_ROOT / "ComfyUI"
+COMFYUI_DIR = Path("~/ComfyUI").expanduser().resolve()
 COMFYUI_PORT = 8188
 FASTAPI_PORT = 8000
 STREAMLIT_PORT = 8501
 
 # ----------------------------- Environment Setup -----------------------------
+
 
 def get_python_exec():
     """Find the Python executable in the local .venv if it exists."""
@@ -38,6 +39,7 @@ def get_python_exec():
         return str(venv_unix)
     return sys.executable
 
+
 PYTHON_EXEC = get_python_exec()
 print(f"🐍 Using Python: {PYTHON_EXEC}")
 
@@ -49,12 +51,15 @@ ENV_VARS["PYTHONPATH"] = str(PROJECT_ROOT)
 
 # ----------------------------- Helpers -----------------------------
 
+
 def check_port_in_use(port: int) -> bool:
     """Check if a port is already in use on localhost."""
     import socket
+
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.settimeout(1) # Don't hang
+        s.settimeout(1)  # Don't hang
         return s.connect_ex(("127.0.0.1", port)) == 0
+
 
 def save_pid(service_name: str, pid: int):
     """Append or update a service PID in the PID file."""
@@ -69,6 +74,7 @@ def save_pid(service_name: str, pid: int):
     with open(PID_FILE, "w") as f:
         json.dump(pids, f)
 
+
 def stream_logs(pipe, prefix: str, log_file):
     """Stream process output to log file."""
     if pipe is None:
@@ -81,7 +87,9 @@ def stream_logs(pipe, prefix: str, log_file):
             log_file.write(text + "\n")
             log_file.flush()
 
+
 # ----------------------------- Service Starters -----------------------------
+
 
 def start_comfyui():
     """Start ComfyUI server."""
@@ -103,9 +111,12 @@ def start_comfyui():
     )
 
     save_pid("comfyui", process.pid)
-    threading.Thread(target=stream_logs, args=(process.stdout, "COMFYUI", log_file), daemon=True).start()
+    threading.Thread(
+        target=stream_logs, args=(process.stdout, "COMFYUI", log_file), daemon=True
+    ).start()
     time.sleep(1)
     return process
+
 
 def start_fastapi():
     """Start FastAPI backend."""
@@ -118,7 +129,17 @@ def start_fastapi():
     log_file = open(log_path, "w", encoding="utf-8")
 
     process = subprocess.Popen(
-        [PYTHON_EXEC, "-m", "uvicorn", "app.main:app", "--reload", "--host", "127.0.0.1", "--port", str(FASTAPI_PORT)],
+        [
+            PYTHON_EXEC,
+            "-m",
+            "uvicorn",
+            "app.main:app",
+            "--reload",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            str(FASTAPI_PORT),
+        ],
         cwd=PROJECT_ROOT,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -127,9 +148,12 @@ def start_fastapi():
     )
 
     save_pid("fastapi", process.pid)
-    threading.Thread(target=stream_logs, args=(process.stdout, "FASTAPI", log_file), daemon=True).start()
+    threading.Thread(
+        target=stream_logs, args=(process.stdout, "FASTAPI", log_file), daemon=True
+    ).start()
     time.sleep(1)
     return process
+
 
 def start_streamlit():
     """Start Streamlit frontend."""
@@ -143,10 +167,19 @@ def start_streamlit():
 
     streamlit_script = PROJECT_ROOT / "app" / "app.py"
     process = subprocess.Popen(
-        [PYTHON_EXEC, "-m", "streamlit", "run", str(streamlit_script),
-         "--server.port", str(STREAMLIT_PORT), 
-         "--server.address", "127.0.0.1", 
-         "--server.headless", "true"],
+        [
+            PYTHON_EXEC,
+            "-m",
+            "streamlit",
+            "run",
+            str(streamlit_script),
+            "--server.port",
+            str(STREAMLIT_PORT),
+            "--server.address",
+            "127.0.0.1",
+            "--server.headless",
+            "true",
+        ],
         cwd=PROJECT_ROOT,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -155,48 +188,31 @@ def start_streamlit():
     )
 
     save_pid("streamlit", process.pid)
-    threading.Thread(target=stream_logs, args=(process.stdout, "STREAMLIT", log_file), daemon=True).start()
+    threading.Thread(
+        target=stream_logs, args=(process.stdout, "STREAMLIT", log_file), daemon=True
+    ).start()
     time.sleep(1)
     return process
 
-def check_ollama():
-    """Check if Ollama is running using HTTP request (Does not freeze)."""
-    print("🤖 Checking Ollama...")
-    
-    # Method 1: HTTP Request (Safest/Fastest)
+
+def check_llm_api():
+    """Check if LLM API is running (llama.cpp server on port 8080)."""
+    print("🤖 Checking LLM API (llama.cpp server on port 8080)...")
+
     try:
-        urllib.request.urlopen("http://127.0.0.1:11434", timeout=1)
-        print("   ✓ Ollama is running")
+        urllib.request.urlopen("http://127.0.0.1:8080/v1/models", timeout=2)
+        print("   ✓ LLM API is running on port 8080")
         return True
     except Exception:
         pass
 
-    # Method 2: Attempt Start
-    print("   ⏳ Starting Ollama...")
-    try:
-        subprocess.Popen(
-            ["ollama", "serve"],
-            stdout=subprocess.DEVNULL, 
-            stderr=subprocess.DEVNULL,
-            creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
-        )
-        # Wait a bit for it to spin up
-        for _ in range(5):
-            time.sleep(1)
-            try:
-                urllib.request.urlopen("http://127.0.0.1:11434", timeout=1)
-                print("   ✓ Ollama started successfully")
-                return True
-            except:
-                pass
-    except Exception as e:
-        print(f"   ❌ Could not start Ollama: {e}")
-        return False
-    
-    print("   ⚠️  Ollama started but not yet responding (it might take a moment).")
-    return True
+    print("   ⚠️  LLM API not detected on port 8080")
+    print("   Please start your llama.cpp server with: ./server -m <model> --port 8080")
+    return False
+
 
 # ----------------------------- Main -----------------------------
+
 
 def main():
     print("========================================")
@@ -206,17 +222,17 @@ def main():
     start_comfyui()
     start_fastapi()
     start_streamlit()
-    check_ollama()
+    check_llm_api()
 
     print("\n✅ Services Initialized!")
     print(f"  • ComfyUI      : http://127.0.0.1:{COMFYUI_PORT}")
     print(f"  • FastAPI Docs : http://127.0.0.1:{FASTAPI_PORT}/docs")
     print(f"  • Streamlit UI : http://127.0.0.1:{STREAMLIT_PORT}")
-    print("  • Ollama       : http://127.0.0.1:11434")
-    
+    print("  • LLM API      : http://127.0.0.1:8080 (llama.cpp)")
+
     print("\nLogs are being written to the 'log/' folder.")
     print("To stop services, run 'python stop.py'")
-    
+
     try:
         time.sleep(2)
         webbrowser.open(f"http://127.0.0.1:{STREAMLIT_PORT}")
@@ -229,6 +245,7 @@ def main():
     except KeyboardInterrupt:
         print("\n\n🛑 Received Ctrl+C. Exiting launcher.")
         print("Run 'python stop.py' to stop services.")
+
 
 if __name__ == "__main__":
     main()

@@ -26,7 +26,7 @@
   },
   "7": {
     "inputs": {
-      "ckpt_name": "SDXL\\juggernautXL_ragnarokBy.safetensors"
+      "ckpt_name": "juggernautxlRagnarok.k3mq.safetensors"
     },
     "class_type": "CheckpointLoaderSimple",
     "_meta": {
@@ -79,7 +79,7 @@
   },
   "12": {
     "inputs": {
-      "control_net_name": "controlnet++_union_sdxl_promax.safetensors"
+      "control_net_name": "diffusion_pytorch_model_promax.safetensors"
     },
     "class_type": "ControlNetLoader",
     "_meta": {

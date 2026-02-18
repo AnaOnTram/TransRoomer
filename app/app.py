@@ -2,14 +2,20 @@
 Streamlit Frontend
 The user interface for Virtual Staging AI.
 """
+
+import sys
+from pathlib import Path
+
+# Add parent directory to Python path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import streamlit as st
 import requests
 import time
 import json
-from pathlib import Path
 from typing import Optional, Tuple
 
-from config import DATA_INPUT_DIR, DATA_OUTPUT_DIR, SAMPLES_DIR
+from app.config import DATA_INPUT_DIR, DATA_OUTPUT_DIR, SAMPLES_DIR
 
 # -----------------------------------------------------------------------------
 # Configuration & Constants
@@ -20,7 +26,7 @@ st.set_page_config(
     page_title="Virtual Staging AI",
     page_icon="🛋️",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
 CSS_STYLES = """
@@ -37,12 +43,13 @@ CSS_STYLES = """
 </style>
 """
 
+
 # -----------------------------------------------------------------------------
 # Utils & API Client
 # -----------------------------------------------------------------------------
 class APIClient:
     """Handles communication with the FastAPI backend."""
-    
+
     @staticmethod
     def is_online() -> bool:
         try:
@@ -52,19 +59,26 @@ class APIClient:
 
     @staticmethod
     def enhance_prompt(description: str) -> dict:
-        resp = requests.post(f"{FASTAPI_URL}/enhance-prompt", json={"room_description": description}, timeout=180)
+        resp = requests.post(
+            f"{FASTAPI_URL}/enhance-prompt",
+            json={"room_description": description},
+            timeout=180,
+        )
         return resp.json()
 
     @staticmethod
-    def generate_image(prompt: str, description: str, image_path: str, resolution: int) -> dict:
+    def generate_image(
+        prompt: str, description: str, image_path: str, resolution: int
+    ) -> dict:
         payload = {
             "enhanced_prompt": prompt,
             "room_description": description,
             "image_path": image_path,
-            "target_resolution": resolution
+            "target_resolution": resolution,
         }
         resp = requests.post(f"{FASTAPI_URL}/generate-image", json=payload, timeout=600)
         return resp.json()
+
 
 def get_next_filename() -> str:
     """Generates sequential filename for inputs."""
@@ -77,6 +91,7 @@ def get_next_filename() -> str:
             continue
     return f"empty_room_{max_num + 1:05d}"
 
+
 def save_input_file(file_bytes: bytes, original_name: str) -> Path:
     """Saves bytes to the input directory with sequential naming."""
     ext = Path(original_name).suffix or ".png"
@@ -86,12 +101,14 @@ def save_input_file(file_bytes: bytes, original_name: str) -> Path:
         f.write(file_bytes)
     return path
 
+
 def get_history() -> list[dict]:
     """Retrieves sorted list of past generations."""
     files = []
     for f in sorted(DATA_OUTPUT_DIR.glob("virtual_staging_*.png"), reverse=True):
         files.append({"path": f, "number": f.stem.split("_")[-1]})
     return files
+
 
 def get_input_for_output(output_path: Path) -> Optional[Path]:
     """Finds the corresponding input file for a generated image."""
@@ -101,6 +118,7 @@ def get_input_for_output(output_path: Path) -> Optional[Path]:
         if candidate.exists():
             return candidate
     return None
+
 
 def load_metadata(output_path: Path) -> dict:
     """Loads metadata JSON if present."""
@@ -112,37 +130,56 @@ def load_metadata(output_path: Path) -> dict:
             pass
     return {}
 
+
 # -----------------------------------------------------------------------------
 # UI Components
 # -----------------------------------------------------------------------------
 
+
 def render_sidebar():
     with st.sidebar:
         st.markdown("### System Status")
-        if APIClient.is_online():
-            st.markdown('<div class="status-indicator status-online">● FastAPI Online</div>', unsafe_allow_html=True)
-        else:
-            st.markdown('<div class="status-indicator status-offline">● FastAPI Offline</div>', unsafe_allow_html=True)
-            st.warning("Ensure backend is running")
-        
+        try:
+            if APIClient.is_online():
+                st.markdown(
+                    '<div class="status-indicator status-online">● FastAPI Online</div>',
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.markdown(
+                    '<div class="status-indicator status-offline">● FastAPI Offline</div>',
+                    unsafe_allow_html=True,
+                )
+                st.warning("Ensure backend is running")
+        except Exception as e:
+            st.error(f"Status check failed: {e}")
+
         st.divider()
         st.markdown("### ⚡ Quick Start Samples")
-        if SAMPLES_DIR.exists():
-            for idx, sample in enumerate(list(SAMPLES_DIR.glob("*.*"))):
-                if sample.suffix.lower() in ['.jpg', '.jpeg', '.png']:
-                    st.image(str(sample), use_container_width=True)
-                    if st.button("Use", key=f"sample_{idx}"):
-                        st.session_state.selected_sample = sample
-                        st.rerun()
+        try:
+            if SAMPLES_DIR.exists():
+                for idx, sample in enumerate(list(SAMPLES_DIR.glob("*.*"))):
+                    if sample.suffix.lower() in [".jpg", ".jpeg", ".png"]:
+                        st.image(str(sample), use_container_width=True)
+                        if st.button("Use", key=f"sample_{idx}"):
+                            st.session_state.selected_sample = sample
+                            st.rerun()
+        except Exception as e:
+            st.error(f"Sample loading failed: {e}")
 
-def render_input_section() -> Tuple[Optional[bytes], Optional[str], bool]:
+
+def render_input_section() -> Tuple[
+    Optional[bytes], Optional[str], Optional[str], Optional[int]
+]:
     """Renders input column and returns file data + active filename + ready state."""
     st.markdown("### 1. Upload & Describe")
     container = st.container(border=True)
-    
+
     with container:
-        uploaded = st.file_uploader("Upload empty room image", type=["png", "jpg", "jpeg"])
-        
+        uploaded = st.file_uploader(
+            "Upload empty room image", type=["png", "jpg", "jpeg"]
+        )
+
         file_bytes = None
         file_name = None
         is_ready = False
@@ -159,7 +196,11 @@ def render_input_section() -> Tuple[Optional[bytes], Optional[str], bool]:
             try:
                 file_bytes = sample.read_bytes()
                 file_name = sample.name
-                st.image(str(sample), caption=f"Selected Sample: {sample.name}", use_container_width=True)
+                st.image(
+                    str(sample),
+                    caption=f"Selected Sample: {sample.name}",
+                    use_container_width=True,
+                )
                 if st.button("❌ Clear Selection", type="secondary"):
                     st.session_state.selected_sample = None
                     st.rerun()
@@ -168,8 +209,12 @@ def render_input_section() -> Tuple[Optional[bytes], Optional[str], bool]:
                 st.error(f"Error reading sample: {e}")
 
         st.markdown("#### Room Details")
-        desc = st.text_area("Describe the style and furniture", placeholder="E.g., Scandinavian living room with a grey sofa, oak coffee table, warm lighting, and indoor plants...", height=120)
-        
+        desc = st.text_area(
+            "Describe the style and furniture",
+            placeholder="E.g., Scandinavian living room with a grey sofa, oak coffee table, warm lighting, and indoor plants...",
+            height=120,
+        )
+
         with st.expander("⚙️ Advanced Settings"):
             res = st.slider(
                 label="Resolution (Shortest Side)",
@@ -177,25 +222,28 @@ def render_input_section() -> Tuple[Optional[bytes], Optional[str], bool]:
                 max_value=4096,
                 value=1024,
                 step=64,
-                help="Higher resolution creates sharper images but increases processing time and VRAM usage."
+                help="Higher resolution creates sharper images but increases processing time and VRAM usage.",
             )
-            
-        generate = st.button("✨ Generate Staging", type="primary", disabled=not (is_ready and desc))
-        
+
+        generate = st.button(
+            "✨ Generate Staging", type="primary", disabled=not (is_ready and desc)
+        )
+
         if generate:
             return file_bytes, file_name, desc, res
-            
+
     return None, None, None, None
+
 
 def render_result_section():
     st.markdown("### 2. Staged Result")
-    
+
     if "result" in st.session_state:
         res = st.session_state.result
         if res.get("success"):
             out_path = Path(res["image_path"])
             in_path = res.get("input_path")
-            
+
             with st.container(border=True):
                 t1, t2 = st.tabs(["🖼️ Side-by-Side", "📝 Prompt Details"])
                 with t1:
@@ -213,12 +261,21 @@ def render_result_section():
                         st.warning("File missing from disk.")
                 with t2:
                     st.info("AI Enhanced Prompt:")
-                    st.text_area("Prompt", value=res.get("enhanced_prompt", ""), height=200, disabled=True)
+                    st.text_area(
+                        "Prompt",
+                        value=res.get("enhanced_prompt", ""),
+                        height=200,
+                        disabled=True,
+                    )
         else:
             st.error(f"Failed: {res.get('error')}")
     else:
         with st.container(border=True):
-            st.markdown("<div style='text-align: center; padding: 3rem; color: #aaa;'><h3>👋 Ready to Design</h3></div>", unsafe_allow_html=True)
+            st.markdown(
+                "<div style='text-align: center; padding: 3rem; color: #aaa;'><h3>👋 Ready to Design</h3></div>",
+                unsafe_allow_html=True,
+            )
+
 
 def render_history():
     st.markdown("---")
@@ -241,70 +298,93 @@ def render_history():
                         "success": True,
                         "image_path": str(path),
                         "input_path": str(get_input_for_output(path) or ""),
-                        "enhanced_prompt": meta.get("prompt", "Restored from history")
+                        "enhanced_prompt": meta.get("prompt", "Restored from history"),
                     }
                     st.rerun()
+
 
 # -----------------------------------------------------------------------------
 # Main Application Logic
 # -----------------------------------------------------------------------------
 def main():
-    if "selected_sample" not in st.session_state:
-        st.session_state.selected_sample = None
+    try:
+        if "selected_sample" not in st.session_state:
+            st.session_state.selected_sample = None
 
-    st.markdown(CSS_STYLES, unsafe_allow_html=True)
-    render_sidebar()
-    
-    st.markdown("<h1>🛋️ Virtual Staging AI</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size: 1.2rem; color: #666; margin-bottom: 2rem;'>Transform empty spaces with Local AI.</p>", unsafe_allow_html=True)
+        st.markdown(CSS_STYLES, unsafe_allow_html=True)
 
-    c_input, c_result = st.columns([1, 1.2], gap="large")
-    
-    with c_input:
-        # returns data if button clicked
-        f_bytes, f_name, desc, res = render_input_section()
-        
-    with c_result:
-        render_result_section()
+        try:
+            render_sidebar()
+        except Exception as e:
+            st.sidebar.error(f"Sidebar error: {e}")
 
-    # Handle Generation Trigger
-    if f_bytes and desc:
-        with st.status("🏗️ AI is working...", expanded=True) as status:
+        st.markdown("<h1>🛋️ Virtual Staging AI</h1>", unsafe_allow_html=True)
+        st.markdown(
+            "<p style='font-size: 1.2rem; color: #666; margin-bottom: 2rem;'>Transform empty spaces with Local AI.</p>",
+            unsafe_allow_html=True,
+        )
+
+        c_input, c_result = st.columns([1, 1.2], gap="large")
+
+        with c_input:
             try:
-                st.write("📤 Saving input...")
-                input_path = save_input_file(f_bytes, f_name)
-                
-                st.write("🤖 Enhancing prompt...")
-                enh_resp = APIClient.enhance_prompt(desc)
-                if not enh_resp.get("success"):
-                    raise Exception(enh_resp.get("error"))
-                
-                st.write(f"🎨 Rendering (Res: {res}px)...")
-                start = time.time()
-                gen_resp = APIClient.generate_image(
-                    enh_resp["enhanced_prompt"], 
-                    desc, 
-                    str(input_path), 
-                    res
-                )
-                
-                if gen_resp.get("success"):
-                    st.session_state.result = {
-                        "success": True,
-                        "image_path": gen_resp["image_path"],
-                        "input_path": str(input_path),
-                        "enhanced_prompt": gen_resp["enhanced_prompt"]
-                    }
-                    status.update(label=f"✅ Done ({time.time()-start:.1f}s)", state="complete", expanded=False)
-                    st.rerun()
-                else:
-                    raise Exception(gen_resp.get("error"))
-                    
+                f_bytes, f_name, desc, res = render_input_section()
             except Exception as e:
-                status.update(label="❌ Error", state="error")
-                st.error(str(e))
+                st.error(f"Input section error: {e}")
+                f_bytes, f_name, desc, res = None, None, None, None
 
-    render_history()
+        with c_result:
+            try:
+                render_result_section()
+            except Exception as e:
+                st.error(f"Result section error: {e}")
+
+        # Handle Generation Trigger
+        if f_bytes and desc and f_name and res:
+            with st.status("🏗️ AI is working...", expanded=True) as status:
+                try:
+                    st.write("📤 Saving input...")
+                    input_path = save_input_file(f_bytes, f_name)
+
+                    st.write("🤖 Enhancing prompt...")
+                    enh_resp = APIClient.enhance_prompt(desc)
+                    if not enh_resp.get("success"):
+                        raise Exception(enh_resp.get("error"))
+
+                    st.write(f"🎨 Rendering (Res: {res}px)...")
+                    start = time.time()
+                    gen_resp = APIClient.generate_image(
+                        enh_resp["enhanced_prompt"], desc, str(input_path), res
+                    )
+
+                    if gen_resp.get("success"):
+                        st.session_state.result = {
+                            "success": True,
+                            "image_path": gen_resp["image_path"],
+                            "input_path": str(input_path),
+                            "enhanced_prompt": gen_resp["enhanced_prompt"],
+                        }
+                        status.update(
+                            label=f"✅ Done ({time.time() - start:.1f}s)",
+                            state="complete",
+                            expanded=False,
+                        )
+                        st.rerun()
+                    else:
+                        raise Exception(gen_resp.get("error"))
+
+                except Exception as e:
+                    status.update(label="❌ Error", state="error")
+                    st.error(str(e))
+
+        render_history()
+
+    except Exception as e:
+        st.error(f"Application error: {e}")
+        import traceback
+
+        st.code(traceback.format_exc())
+
 
 if __name__ == "__main__":
     main()
